@@ -1,9 +1,9 @@
 package command
 
 import (
-	"github.com/iFaceless/leetgogo-cli/pkg/leetcode"
-	"github.com/iFaceless/leetgogo-cli/pkg/leetcode/entity"
-	"github.com/iFaceless/leetgogo-cli/pkg/workdir"
+	"github.com/iFaceless/leetgogo-cli/leetcode"
+	"github.com/iFaceless/leetgogo-cli/leetcode/entity"
+	"github.com/iFaceless/leetgogo-cli/workdir"
 	"github.com/spf13/cobra"
 	"log"
 	"net/url"

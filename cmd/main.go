@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/iFaceless/leetgogo-cli/pkg/command"
+	"github.com/iFaceless/leetgogo-cli/command"
 	"log"
 )
 

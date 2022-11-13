@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/iFaceless/leetgogo-cli/pkg/leetcode/entity"
+	"github.com/iFaceless/leetgogo-cli/leetcode/entity"
 	"log"
 	"os"
 	"path/filepath"

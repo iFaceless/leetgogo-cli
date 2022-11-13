@@ -2,7 +2,7 @@ package command
 
 import (
 	"fmt"
-	"github.com/iFaceless/leetgogo-cli/pkg/workdir"
+	"github.com/iFaceless/leetgogo-cli/workdir"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
