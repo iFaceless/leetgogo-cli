@@ -3,7 +3,7 @@ package leetcode
 import (
 	"errors"
 	"fmt"
-	"github.com/iFaceless/leetgogo-cli/entity"
+	entity2 "github.com/iFaceless/leetgogo-cli/pkg/leetcode/entity"
 	"github.com/imroc/req/v3"
 	"strings"
 	"time"
@@ -45,7 +45,7 @@ func NewClient() *Client {
 	}
 }
 
-func (cli *Client) RandomProblem(category ProblemCategory) (*entity.Problem, error) {
+func (cli *Client) RandomProblem(category ProblemCategory) (*entity2.Problem, error) {
 	refer := "https://leetcode.cn/problemset/all/"
 	body := map[string]string{
 		"query": `
@@ -75,7 +75,7 @@ query problemsetRandomFilteredQuestion($categorySlug: String!, $filters: Questio
 	return cli.ProblemBySlug(result.Data.ProblemsetRandomFilteredQuestion)
 }
 
-func (cli *Client) ProblemBySlug(slug string) (*entity.Problem, error) {
+func (cli *Client) ProblemBySlug(slug string) (*entity2.Problem, error) {
 	refer := fmt.Sprintf(problemDetailURL, slug)
 	body := map[string]string{
 		"query": `
@@ -100,7 +100,7 @@ query getQuestionDetail($titleSlug: String!) {,
 
 	type Result struct {
 		Data struct {
-			Problem entity.Problem `json:"question"`
+			Problem entity2.Problem `json:"question"`
 		}
 	}
 
@@ -137,7 +137,7 @@ query getQuestionDetail($titleSlug: String!) {,
 
 	type Result struct {
 		Data struct {
-			Problem entity.Problem `json:"question"`
+			Problem entity2.Problem `json:"question"`
 		}
 	}
 
@@ -338,7 +338,7 @@ func (cli *Client) favoriteIDHashList(favoriteNames ...string) ([]string, error)
 	return idHashList, nil
 }
 
-func (cli *Client) UserFavorites() ([]*entity.Favorite, error) {
+func (cli *Client) UserFavorites() ([]*entity2.Favorite, error) {
 	refer := "https://leetcode.cn/problemset/all/"
 	body := map[string]string{
 		"query": `
@@ -358,7 +358,7 @@ query userFavorites {
 	type Result struct {
 		Data struct {
 			FavoritesLists struct {
-				AllFavorites []*entity.Favorite `json:"allFavorites"`
+				AllFavorites []*entity2.Favorite `json:"allFavorites"`
 			} `json:"favoritesLists"`
 		} `json:"data"`
 	}
@@ -380,8 +380,8 @@ query userFavorites {
 	return result.Data.FavoritesLists.AllFavorites, nil
 }
 
-func (cli *Client) ExecuteProblemSolution(solution *entity.Solution, testCases []string) (*entity.ExecuteSolutionResult, error) {
-	var result entity.ExecuteSolutionResult
+func (cli *Client) ExecuteProblemSolution(solution *entity2.Solution, testCases []string) (*entity2.ExecuteSolutionResult, error) {
+	var result entity2.ExecuteSolutionResult
 	err := cli.handleProblemSolution(actionTypeExecute, solution, testCases, &result)
 	if err != nil {
 		return nil, err
@@ -389,8 +389,8 @@ func (cli *Client) ExecuteProblemSolution(solution *entity.Solution, testCases [
 	return &result, nil
 }
 
-func (cli *Client) SubmitProblemSolution(solution *entity.Solution) (*entity.SubmitSolutionResult, error) {
-	var result entity.SubmitSolutionResult
+func (cli *Client) SubmitProblemSolution(solution *entity2.Solution) (*entity2.SubmitSolutionResult, error) {
+	var result entity2.SubmitSolutionResult
 	err := cli.handleProblemSolution(actionTypeSubmit, solution, nil, &result)
 	if err != nil {
 		return nil, err
@@ -400,7 +400,7 @@ func (cli *Client) SubmitProblemSolution(solution *entity.Solution) (*entity.Sub
 
 var errNeedRetry = errors.New("state not success")
 
-func (cli *Client) handleProblemSolution(actionType actionType, solution *entity.Solution, testCases []string, result interface{}) error {
+func (cli *Client) handleProblemSolution(actionType actionType, solution *entity2.Solution, testCases []string, result interface{}) error {
 	refer := fmt.Sprintf(problemDetailURL, solution.ProblemSlug)
 	problemID, err := cli.ProblemIDBySlug(solution.ProblemSlug)
 	if err != nil {
@@ -464,7 +464,7 @@ func (cli *Client) handleProblemSolution(actionType actionType, solution *entity
 			return err
 		}
 
-		retriever, ok := result.(entity.StateRetriever)
+		retriever, ok := result.(entity2.StateRetriever)
 		if !ok {
 			return errors.New("cannot get state from response content")
 		}
