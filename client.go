@@ -9,12 +9,17 @@ import (
 	"time"
 )
 
-type ExecuteType int
+type actionType int
 
 const (
-	ExecuteTypeTest ExecuteType = iota
-	ExecuteTypeSubmit
+	actionTypeExecute actionType = iota
+	actionTypeSubmit
 )
+
+var actionURLMapping = map[actionType]string{
+	actionTypeSubmit:  submitURL,
+	actionTypeExecute: executeURL,
+}
 
 type Client struct {
 	restCli *req.Client
@@ -375,14 +380,118 @@ query userFavorites {
 	return result.Data.FavoritesLists.AllFavorites, nil
 }
 
-func (cli *Client) TestProblemSolution(solution *entity.Solution, testCases []string) error {
-	return cli.executeProblemSolution(ExecuteTypeTest, solution, testCases)
+func (cli *Client) ExecuteProblemSolution(solution *entity.Solution, testCases []string) (*entity.ExecuteSolutionResult, error) {
+	var result entity.ExecuteSolutionResult
+	err := cli.handleProblemSolution(actionTypeExecute, solution, testCases, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-func (cli *Client) SubmitProblemSolution(solution *entity.Solution) error {
-	return cli.executeProblemSolution(ExecuteTypeSubmit, solution, nil)
+func (cli *Client) SubmitProblemSolution(solution *entity.Solution) (*entity.SubmitSolutionResult, error) {
+	var result entity.SubmitSolutionResult
+	err := cli.handleProblemSolution(actionTypeSubmit, solution, nil, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
-func (cli *Client) executeProblemSolution(executeType ExecuteType, solution *entity.Solution, testCases []string) error {
-	return nil
+var errNeedRetry = errors.New("state not success")
+
+func (cli *Client) handleProblemSolution(actionType actionType, solution *entity.Solution, testCases []string, result interface{}) error {
+	refer := fmt.Sprintf(problemDetailURL, solution.ProblemSlug)
+	problemID, err := cli.ProblemIDBySlug(solution.ProblemSlug)
+	if err != nil {
+		return fmt.Errorf("failed to get problem id by slug: %s", err)
+	}
+
+	_, ok := supportedLangs[solution.Lang]
+	if !ok {
+		return fmt.Errorf("unsupported lang %s", solution.Lang)
+	}
+
+	body := map[string]string{
+		"data_input":  strings.Join(testCases, "\n"),
+		"lang":        solution.Lang,
+		"question_id": problemID,
+		"typed_code":  solution.Code,
+	}
+
+	type Result struct {
+		InterpretExpectedID string `json:"interpret_expected_id"`
+		InterpretID         string `json:"interpret_id"`
+		TestCases           string `json:"test_case"`
+		SubmissionID        int    `json:"submission_id"`
+	}
+
+	var uploadResult Result
+	requestURL := fmt.Sprintf(actionURLMapping[actionType], solution.ProblemSlug)
+	uploadResp := cli.restCli.
+		Post(requestURL).
+		SetHeader("Referer", refer).
+		SetBodyJsonMarshal(body).
+		SetResult(&uploadResult).
+		EnableDump().
+		Do()
+
+	if uploadResp.Err != nil {
+		return uploadResp.Err
+	}
+
+	var checkID string
+	switch actionType {
+	case actionTypeExecute:
+		checkID = uploadResult.InterpretID
+	case actionTypeSubmit:
+		checkID = fmt.Sprintf("%d", uploadResult.SubmissionID)
+	default:
+		return fmt.Errorf("unsupported action type: %d", actionType)
+	}
+	if checkID == "" {
+		return fmt.Errorf("failed to execute or submit solution: %s", uploadResp.String())
+	}
+
+	check := func() error {
+		resp := cli.restCli.
+			Get(fmt.Sprintf(checkResultURL, checkID)).
+			SetHeader("Referer", refer).
+			SetResult(&result).
+			EnableDump().
+			Do()
+		if resp.Err != nil {
+			return err
+		}
+
+		retriever, ok := result.(entity.StateRetriever)
+		if !ok {
+			return errors.New("cannot get state from response content")
+		}
+		state := retriever.RetrieveState()
+
+		if state == "" {
+			return fmt.Errorf("failed to check, state is empty, raw response: %s", resp.String())
+		}
+
+		if state != "SUCCESS" {
+			return errNeedRetry
+		}
+
+		return nil
+	}
+
+	for i := 0; i < 30; i++ {
+		time.Sleep(500 * time.Millisecond)
+		err := check()
+		if err != nil {
+			if errors.Is(err, errNeedRetry) {
+				continue
+			}
+			return err
+		}
+		return nil
+	}
+
+	return errors.New("timeout to check result")
 }

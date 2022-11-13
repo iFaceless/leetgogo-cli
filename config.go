@@ -1,15 +1,13 @@
 package leetcode
 
 const (
-	baseURL           = "https://leetcode.cn"
-	graphqlURL        = "https://leetcode.cn/graphql"
-	problemsURL       = "https://leetcode.cn/api/problems/$category/"
-	problemDetailURL  = "https://leetcode.cn/problems/%s/description/"
-	testURL           = "https://leetcode.cn/problems/$slug/interpret_solution/"
-	submitURL         = "https://leetcode.cn/problems/$slug/submit/"
-	verifyURL         = "https://leetcode.cn/submissions/detail/$id/check/"
-	favoritesURL      = "https://leetcode.cn/list/api/questions"
-	favoriteDeleteURL = "https://leetcode.cn/list/api/questions/$hash/$id"
+	baseURL          = "https://leetcode.cn"
+	graphqlURL       = "https://leetcode.cn/graphql"
+	problemsURL      = "https://leetcode.cn/api/problems/$category/"
+	problemDetailURL = "https://leetcode.cn/problems/%s/description/"
+	executeURL       = "https://leetcode.cn/problems/%s/interpret_solution/"
+	checkResultURL   = "https://leetcode.cn/submissions/detail/%s/check/"
+	submitURL        = "https://leetcode.cn/problems/%s/submit/"
 )
 
 var supportedLangs = map[string]struct{}{
