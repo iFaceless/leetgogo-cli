@@ -4,7 +4,7 @@ import "github.com/spf13/cobra"
 
 func init() {
 	cmdSubmit := &cobra.Command{
-		Use:   "exec [--solution-filename filename] problem_slug",
+		Use:   "submit [--solution-filename filename] problem_slug",
 		Short: "submit solution code to leetcode server",
 		Args:  cobra.ExactArgs(1),
 		Run:   handleSubmitSolutionCommand,
