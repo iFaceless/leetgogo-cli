@@ -3,6 +3,7 @@ package entity
 import "encoding/json"
 
 type Problem struct {
+	Slug        string `json:"slug"`
 	ID          string `json:"questionId"`
 	Title       string `json:"title"`
 	Difficulty  string `json:"difficulty"`
